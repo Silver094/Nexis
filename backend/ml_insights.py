@@ -5,9 +5,9 @@ from sklearn.linear_model import LinearRegression
 from scipy.stats import variation
 from database.models import habits_collection
 
-def get_user_habit_data(user_id):
+def get_user_habit_data(user_email):
     """Fetch user habit data from MongoDB"""
-    habits = list(habits_collection.find({"user_id": user_id}, {"_id": 0, "streak": 1, "timestamp": 1}))
+    habits = list(habits_collection.find({"user_email": user_email}, {"_id": 0, "streak": 1, "timestamp": 1}))
 
     if not habits:
         return None, None
@@ -45,25 +45,25 @@ def cluster_habits(y):
     
     return cluster_map[cluster_label]
 
-def generate_insights(user_id):
-    """Generate ML-based habit insights"""
-    X, y = get_user_habit_data(user_id)
+from database.connection import db
 
-    if X is None or y is None:
+def generate_insights(user_email):
+    print(f"Generating insights for: {user_email}")  # Debug log
+
+    habits = list(db["habits"].find({"user_email": user_email}))
+    print(f"Total habits found: {len(habits)}")  # Debug log
+
+    if len(habits) < 5:  # Not enough data
         return {"message": "Not enough data for analysis"}
 
-    model = LinearRegression()
-    model.fit(X, y)
+    # Simulate AI-based analysis (replace with ML logic later)
+    completed = sum(1 for h in habits if h.get("status") == "completed")
+    missed = sum(1 for h in habits if h.get("status") == "missed")
 
-    # Predict next week's streaks
-    future_X = np.array(range(len(X), len(X) + 7)).reshape(-1, 1)
-    predictions = model.predict(future_X)
+    print(f"Completed: {completed}, Missed: {missed}")  # Debug log
 
-    insights = {
-        "trend": "Increasing" if model.coef_[0] > 0 else "Decreasing",
-        "next_week_prediction": predictions.tolist(),
-        "habit_consistency": calculate_consistency(y),
-        "habit_strength": cluster_habits(y),
+    return {
+        "consistency_score": round(completed / (completed + missed) * 100, 2),
+        "recommendation": "Try to maintain streaks on missed days."
     }
 
-    return insights

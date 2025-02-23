@@ -13,17 +13,21 @@ def register():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
+    print(data)
+    
 
     # Check if user exists
     if users_collection.find_one({"email": email}):
-        return jsonify({"message": "User already exists"}), 400
+        return jsonify({"message": "User already exists"}), 409
 
     # Hash password
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
     # Store user
     users_collection.insert_one({"email": email, "password": hashed_password})
-    return jsonify({"message": "User registered successfully"}), 201
+
+    access_token = create_access_token(identity=email)
+    return jsonify({"token": access_token}), 200
 
 # 🔵 User Login
 @routes.route("/login", methods=["POST"])
@@ -79,8 +83,10 @@ def delete_habit(habit_name):
     habits_collection.delete_one({"user_email": user_email, "name": habit_name})
     return jsonify({"message": "Habit deleted successfully"}), 200
 
-@routes.route("/api/insights/<user_id>", methods=["GET"])
-def get_insights(user_id):
-    """Return AI-driven habit insights for a user"""
-    insights = generate_insights(user_id)
+@routes.route("/api/insights", methods=["GET"])
+@jwt_required()
+def get_user_insights():
+    user_email = get_jwt_identity()
+    insights = generate_insights(user_email)  # Function from ml_insights.py
     return jsonify({"insights": insights})
+
