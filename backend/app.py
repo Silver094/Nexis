@@ -7,8 +7,6 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
-
-
 app.config["JWT_SECRET_KEY"] = Config.SECRET_KEY
 jwt = JWTManager(app)
 
@@ -16,4 +14,7 @@ jwt = JWTManager(app)
 app.register_blueprint(routes)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=5000)
+
+
