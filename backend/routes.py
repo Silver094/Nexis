@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import bcrypt
 from database.models import users_collection, habits_collection
+from backend.ml_insights import generate_insights
 
 # Create a Blueprint (modular API routes)
 routes = Blueprint("routes", __name__)
@@ -77,3 +78,9 @@ def delete_habit(habit_name):
     user_email = get_jwt_identity()
     habits_collection.delete_one({"user_email": user_email, "name": habit_name})
     return jsonify({"message": "Habit deleted successfully"}), 200
+
+@routes.route("/api/insights/<user_id>", methods=["GET"])
+def get_insights(user_id):
+    """Return AI-driven habit insights for a user"""
+    insights = generate_insights(user_id)
+    return jsonify({"insights": insights})
