@@ -13,7 +13,7 @@ const Home = () => {
           <p className="lead">
             Stay consistent, track your progress, and let AI guide your journey towards better habits.
           </p>
-          <Link to="/register">
+          <Link to={localStorage.getItem('token')?"/dashboard":"/register"}>
             <Button variant="primary" size="lg">Get Started</Button>
           </Link>
         </Col>

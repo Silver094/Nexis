@@ -1,47 +1,59 @@
 import React, { useEffect, useState } from "react";
 import { Card, Form, Button, ListGroup } from "react-bootstrap";
 import { FaPlusCircle, FaTrash } from "react-icons/fa";
-import { fetchHabits, addHabit, deleteHabit } from "../services/api"; // Import the necessary API functions
-
+import useAxios from "../hooks/useAxios";
 const Habits = () => {
   const [habit, setHabit] = useState("");
   const [habits, setHabits] = useState([]);
 
+  const { fetchData } = useAxios();
+
   useEffect(() => {
     const getHabits = async () => {
-      try {
-        const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
-        const response = await fetchHabits(token);
+      const response = await fetchData({
+        method: "GET",
+        url: "/habits",
+        auth: true,
+      });
+      if (response.data) {
         setHabits(response.data);
-      } catch (error) {
-        console.error("Error fetching habits:", error);
+      } else {
+        console.error("Error fetching habits:", response.error);
       }
     };
 
     getHabits();
+    // eslint-disable-next-line
   }, []);
 
   const handleAddHabit = async (e) => {
     e.preventDefault();
     if (habit.trim() !== "") {
-      try {
-        const token = localStorage.getItem("token");
-        await addHabit(token, { name: habit });
-        setHabits([...habits, habit]);
+      const response = await fetchData({
+        method: "POST",
+        url: "/habits",
+        options: { data: { name: habit } },
+        auth: true,
+      });
+      if (response.data) {
+        setHabits([...habits, response.data]);
         setHabit("");
-      } catch (error) {
-        console.error("Error adding habit:", error);
+      } else {
+        console.error("Error adding habit:", response.error);
       }
     }
   };
 
-  const handleDeleteHabit = async (habitName) => {
-    try {
-      const token = localStorage.getItem("token");
-      setHabits(habits.filter((h) => h !== habitName));
-      await deleteHabit(token, habitName);
-    } catch (error) {
-      console.error("Error deleting habit:", error);
+  const handleDeleteHabit = async (habitToDelete) => {
+    const response = await fetchData({
+      method: "DELETE",
+      url: `/habits/${habitToDelete.id}`,
+      auth: true,
+    });
+    if (response.statusCode === 200) {
+      setHabits(habits.filter((h) => h.id !== habitToDelete.id));
+    } else {
+      console.error("Error deleting habit:", response.error);
     }
   };
 
