@@ -3,15 +3,15 @@ from datetime import datetime, timedelta
 
 habits_collection = db["habits"]
 
-# Sample user email and user_id
+# Sample user email and user_email
 user_email = "test@example.com"
-user_id = "user123"  # Add a unique user_id
+user_email = "user123"  # Add a unique user_email
 
 # Generate past 10 days of habit tracking data
 habit_history = []
 for i in range(20):
     habit_history.append({
-        "user_id": user_id,  # Add user_id to each document
+        "user_email": user_email,  # Add user_email to each document
         "user_email": user_email,
         "name": f"Morning Run {i+1}",  # Make name unique for each document
         "streak": i + 1,

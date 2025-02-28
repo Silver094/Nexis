@@ -3,7 +3,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 import bcrypt
 from database.models import users_collection, habits_collection
 from backend.ml_insights import generate_insights
-
+from datetime import timedelta
 # Create a Blueprint (modular API routes)
 routes = Blueprint("routes", __name__)
 
@@ -26,7 +26,7 @@ def register():
     # Store user
     users_collection.insert_one({"email": email, "password": hashed_password})
 
-    access_token = create_access_token(identity=email)
+    access_token = create_access_token(identity=email, expires_delta=timedelta(days=30))
     return jsonify({"token": access_token}), 200
 
 # 🔵 User Login
@@ -41,7 +41,7 @@ def login():
         return jsonify({"message": "Invalid credentials"}), 401
 
     # Generate JWT token
-    access_token = create_access_token(identity=email)
+    access_token = create_access_token(identity=email, expires_delta=timedelta(days=30))
     return jsonify({"token": access_token}), 200
 
 # 🟢 Create a Habit (Authenticated)
@@ -51,13 +51,15 @@ def create_habit():
     user_email = get_jwt_identity()
     data = request.get_json()
     habit_name = data.get("name")
+    print(user_email)
 
     # Check if habit already exists
     if habits_collection.find_one({"user_email": user_email, "name": habit_name}):
-        return jsonify({"message": "Habit already exists"}), 400
+        return jsonify({"message": "Habit already exists"}), 409
 
     habits_collection.insert_one({"user_email": user_email, "name": habit_name, "streak": 0})
-    return jsonify({"message": "Habit added successfully"}), 201
+    habits = list(habits_collection.find({"user_email": user_email}, {"_id": 0}))
+    return jsonify({"message": "Habit added successfully", "habits": habits}), 201
 
 # 🔵 Get All Habits (Authenticated)
 @routes.route("/habits", methods=["GET"])
@@ -71,9 +73,10 @@ def get_habits():
 @routes.route("/habits/<habit_name>", methods=["PUT"])
 @jwt_required()
 def update_habit(habit_name):
-    user_email = get_jwt_identity()
+    user_email = get_jwt_identity() 
     habits_collection.update_one({"user_email": user_email, "name": habit_name}, {"$inc": {"streak": 1}})
-    return jsonify({"message": "Habit updated successfully"}), 200
+    habits = list(habits_collection.find({"user_email": user_email}, {"_id": 0}))
+    return jsonify({"message": "Habit updated successfully","habits":habits}), 201
 
 # 🔴 Delete a Habit (Authenticated)
 @routes.route("/habits/<habit_name>", methods=["DELETE"])
@@ -81,7 +84,9 @@ def update_habit(habit_name):
 def delete_habit(habit_name):
     user_email = get_jwt_identity()
     habits_collection.delete_one({"user_email": user_email, "name": habit_name})
-    return jsonify({"message": "Habit deleted successfully"}), 200
+    habits = list(habits_collection.find({"user_email": user_email}, {"_id": 0}))
+    return jsonify({"message": "Habit deleted successfully","habits":habits}), 201
+
 
 @routes.route("/api/insights", methods=["GET"])
 @jwt_required()

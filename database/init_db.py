@@ -10,12 +10,12 @@ def initialize_db():
 
     # Ensure Habits Collection Exists
     if "habits" not in habits_collection.database.list_collection_names():
-        habits_collection.create_index([("user_id", 1), ("name", 1)], unique=True)  # Avoid duplicate habits per user
+        habits_collection.create_index([("user_email", 1), ("name", 1)], unique=True)  # Avoid duplicate habits per user
         print("✅ Created Habits collection.")
 
     # Ensure AI Insights Collection Exists
     if "insights" not in insights_collection.database.list_collection_names():
-        insights_collection.create_index("user_id")  # AI insights linked to user
+        insights_collection.create_index("user_email")  # AI insights linked to user
         print("✅ Created Insights collection.")
 
 if __name__ == "__main__":

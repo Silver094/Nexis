@@ -11,7 +11,7 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    const { statusCode } = await fetchData({
+    const { data,statusCode } = await fetchData({
       method: "POST",
       url: "/register",
       options: {
@@ -20,6 +20,7 @@ const Register = () => {
     });
     if (statusCode === 200) {
       alert("User registered successfully");
+      localStorage.setItem("token",data.token)
       navigate("/dashboard");
     } else if (statusCode === 409) {
       alert("User already exists");
