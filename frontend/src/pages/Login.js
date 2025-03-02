@@ -21,7 +21,7 @@ const Login = () => {
       if (statusCode === 200) {
         localStorage.setItem("token", data.token);
         navigate("/dashboard");
-      } else if (statusCode === 401) {
+      } else if (statusCode === 402) {
         alert("Invalid credentials");
       } else if (statusCode === 404) {
         alert("User not found");

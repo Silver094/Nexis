@@ -1,69 +1,66 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
-from sklearn.linear_model import LinearRegression
-from scipy.stats import variation
 from database.models import habits_collection
-
-def get_user_habit_data(user_email):
-    """Fetch user habit data from MongoDB"""
-    habits = list(habits_collection.find({"user_email": user_email}, {"_id": 0, "streak": 1, "timestamp": 1}))
-
-    if not habits:
-        return None, None
-    
-    X = np.array(range(len(habits))).reshape(-1, 1)  # Days
-    y = np.array([habit["streak"] for habit in habits])  # Streak counts
-
-    return X, y
-
-def calculate_consistency(y):
-    """Analyze habit consistency using variation coefficient"""
-    if len(y) < 2:
-        return "Not enough data"
-
-    consistency_score = variation(y)  # Coefficient of variation
-
-    if consistency_score < 0.3:
-        return "Highly Consistent"
-    elif consistency_score < 0.7:
-        return "Moderately Consistent"
-    else:
-        return "Inconsistent"
-
-def cluster_habits(y):
-    """Classify habits into clusters based on performance"""
-    if len(y) < 3:
-        return "Insufficient data for clustering"
-
-    kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
-    y_reshaped = np.array(y).reshape(-1, 1)
-    kmeans.fit(y_reshaped)
-
-    cluster_label = kmeans.predict(y_reshaped)[-1]  # Get user's latest cluster
-    cluster_map = {0: "Weak", 1: "Moderate", 2: "Strong"}
-    
-    return cluster_map[cluster_label]
-
-from database.connection import db
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.cluster import KMeans
 
 def generate_insights(user_email):
-    print(f"Generating insights for: {user_email}")  # Debug log
+    # Fetch user habits
+    user_habits = list(habits_collection.find({"user_email": user_email}, {"_id": 0}))
 
-    habits = list(db["habits"].find({"user_email": user_email}))
-    print(f"Total habits found: {len(habits)}")  # Debug log
+    if not user_habits:
+        return {"message": "No habits found for insights."}
 
-    if len(habits) < 5:  # Not enough data
-        return {"message": "Not enough data for analysis"}
+    # Extract habit streaks
+    streaks = [habit.get("streak", 0) for habit in user_habits]
+    habit_names = [habit.get("name", "Unknown") for habit in user_habits]
+    
+    # Convert to DataFrame
+    df = pd.DataFrame({"habit": habit_names, "streak": streaks})
 
-    # Simulate AI-based analysis (replace with ML logic later)
-    completed = sum(1 for h in habits if h.get("status") == "completed")
-    missed = sum(1 for h in habits if h.get("status") == "missed")
+    # 🔹 Basic Insights
+    avg_streak = float(np.mean(streaks) if streaks else 0)
+    max_streak = int(np.max(streaks) if streaks else 0)
 
-    print(f"Completed: {completed}, Missed: {missed}")  # Debug log
+    # 🔹 Trend Analysis (Regression)
+    if len(streaks) >= 2:  # Regression needs at least 2 data points
+        X = np.arange(len(streaks)).reshape(-1, 1)  # Time index
+        y = np.array(streaks).reshape(-1, 1)
 
-    return {
-        "consistency_score": round(completed / (completed + missed) * 100, 2),
-        "recommendation": "Try to maintain streaks on missed days."
+        model = LinearRegression()
+        model.fit(X, y)
+        predicted_next_streak = round(model.predict([[len(streaks)]])[0][0], 2)
+    else:
+        predicted_next_streak = "Insufficient data for trend prediction"
+
+    # 🔹 Anomaly Detection (Z-score)
+    streaks_arr = np.array(streaks)
+    mean_streak = np.mean(streaks_arr)
+    std_streak = np.std(streaks_arr)
+
+    if std_streak > 0:
+        z_scores = (streaks_arr - mean_streak) / std_streak
+        anomalies = [habit_names[i] for i, z in enumerate(z_scores) if abs(z) > 2]  # Outliers
+    else:
+        anomalies = []
+
+    # 🔹 Clustering Similar Users (K-Means)
+    if len(streaks) >= 3:
+        kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)  # 2 habit engagement groups
+        df["cluster"] = kmeans.fit_predict(df[["streak"]])
+        cluster_label = df["cluster"].iloc[0]  # User's cluster
+        suggestion = "You belong to a high-engagement group!" if cluster_label == 1 else "Try maintaining better consistency!"
+    else:
+        suggestion = "Not enough data for habit clustering."
+
+    # 🔹 Final Insights
+    insights = {
+        "total_habits": len(user_habits),
+        "average_streak": round(avg_streak, 2),
+        "longest_streak": max_streak,
+        "predicted_next_streak": predicted_next_streak,
+        "anomalous_habits": anomalies if anomalies else "No anomalies detected",
+        "cluster_suggestion": suggestion
     }
 
+    return insights

@@ -100,6 +100,35 @@ def delete_habit(habit_name):
     habits = list(habits_collection.find({"user_email": user_email}, {"_id": 0}))
     return jsonify({"message": "Habit deleted successfully","habits":habits}), 201
 
+@routes.route("/api/progress", methods=["GET"])
+@jwt_required()
+def get_progress():
+    user_email = get_jwt_identity()
+    
+    # Fetch user habits
+    user_habits = list(habits_collection.find({"user_email": user_email}, {"_id": 0}))
+    
+    if not user_habits:
+        return jsonify({"progress": {
+            "overall_completion": 0,
+            "streak_trends": []
+        }}), 200
+    
+    # Calculate total habits and active habits
+    total_habits = len(user_habits)
+    active_habits = sum(1 for habit in user_habits if habit.get("streak", 0) > 0)
+    
+    # Overall progress percentage
+    overall_completion = round((active_habits / total_habits) * 100, 2) if total_habits > 0 else 0
+    
+    # Generate streak trends (example: last 7 days streaks)
+    streak_trends = [{"date": f"Day {i+1}", "streak": habit["streak"]} for i, habit in enumerate(user_habits) if "streak" in habit]
+    
+    return jsonify({"progress": {
+        "overall_completion": overall_completion,
+        "streak_trends": streak_trends
+    }}), 200
+
 
 
 
@@ -107,6 +136,6 @@ def delete_habit(habit_name):
 @jwt_required()
 def get_user_insights():
     user_email = get_jwt_identity()
-    insights = generate_insights(user_email)  # Function from ml_insights.py
+    insights = generate_insights(user_email)  # Fetch AI-generated insights
     return jsonify({"insights": insights})
 

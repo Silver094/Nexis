@@ -9,18 +9,16 @@ const Dashboard = () => {
     <Container className="mt-4">
       <h2 className="text-center mb-4">Your Dashboard</h2>
       <Row>
-        <Col md={6}>
-          <Habits />
-        </Col>
-        <Col md={6}>
-          <Insights />
-        </Col>
+        <Habits />
       </Row>
       <Row className="mt-4">
+        <Insights />
+      </Row>
+      {/* <Row className="mt-4">
         <Col>
           <Progress />
         </Col>
-      </Row>
+      </Row> */}
     </Container>
   );
 };

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Card, Form, Button } from "react-bootstrap";
-import { FaPlusCircle } from "react-icons/fa";
+import { Card, Form, Button, ListGroup, Badge } from "react-bootstrap";
+import { FaPlusCircle, FaCheck, FaTrash } from "react-icons/fa";
 import useAxios from "../hooks/useAxios";
+
 const Habits = () => {
   const [habit, setHabit] = useState("");
   const [habits, setHabits] = useState([]);
@@ -22,7 +23,6 @@ const Habits = () => {
     };
 
     getHabits();
-    // eslint-disable-next-line
   }, []);
 
   const handleAddHabit = async (e) => {
@@ -76,40 +76,76 @@ const Habits = () => {
 
   return (
     <Card className="p-4 shadow">
-      <h4>My Habits</h4>
-      <Form onSubmit={handleAddHabit}>
+      <h4 className="mb-3">🌱 My Habits</h4>
+      <Form onSubmit={handleAddHabit} className="d-flex gap-2 flex-wrap">
         <Form.Control
           type="text"
-          placeholder="Enter a habit"
+          placeholder="Enter a habit..."
           value={habit}
           onChange={(e) => setHabit(e.target.value)}
           required
+          className="flex-grow-1"
         />
-        <Button type="submit" variant="success" className="mt-2">
-          <FaPlusCircle /> Add Habit
+        <Button type="submit" variant="success">
+          <FaPlusCircle /> Add
         </Button>
       </Form>
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Habit</th>
-            <th>Streak</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+
+      {habits?.length > 0 ? (
+        <ListGroup variant="flush" className="mt-3">
           {habits.map((habit, index) => (
-            <tr key={index}>
-              <td>{habit.name}</td>
-              <td>{habit.streak}</td>
-              <td>
-                <button onClick={() => handleUpdate(habit.name)}>✅</button>
-                <button onClick={() => handleDelete(habit.name)}>❌</button>
-              </td>
-            </tr>
+            <ListGroup.Item
+              key={index}
+              className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 px-3 py-2"
+            >
+              {/* Habit Name */}
+              <div className="flex-grow-1 text-center text-md-start">
+                <strong className="text-primary">
+                  {habit.name.charAt(0).toUpperCase() + habit.name.slice(1)}
+                </strong>
+              </div>
+
+              {/* Streak Badge */}
+              <Badge
+                bg={
+                  habit.streak >= 10
+                    ? "success"
+                    : habit.streak >= 5
+                    ? "warning"
+                    : "info"
+                }
+                className="px-3 py-2 rounded-pill text-center"
+                style={{
+                  fontSize: "0.9rem",
+                  minWidth: "110px",
+                }}
+              >
+                🔥 {habit.streak} Days
+              </Badge>
+
+              {/* Action Buttons */}
+              <div className="d-flex gap-2">
+                <Button
+                  variant="outline-success"
+                  size="sm"
+                  onClick={() => handleUpdate(habit.name)}
+                >
+                  <FaCheck />
+                </Button>
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  onClick={() => handleDelete(habit.name)}
+                >
+                  <FaTrash />
+                </Button>
+              </div>
+            </ListGroup.Item>
           ))}
-        </tbody>
-      </table>
+        </ListGroup>
+      ) : (
+        <p className="text-center mt-3">No habits added yet. Start tracking! 🚀</p>
+      )}
     </Card>
   );
 };
