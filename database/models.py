@@ -6,7 +6,7 @@ users_collection = db["users"]
 habits_collection = db["habits"]
 insights_collection = db["insights"]
 
-def insert_habit(user_name, habit_name, duration=0, status="pending"):
+def insert_habit(user_email, habit_name, duration=0, status="pending"):
     """Insert a new habit only if it doesn’t already exist"""
     if not habit_name:
         return {"error": "Habit name cannot be empty"}
@@ -18,10 +18,9 @@ def insert_habit(user_name, habit_name, duration=0, status="pending"):
 
     habit_data = {
         "user_email": user_email,
-        "habit_name": habit_name,
+        "name": habit_name,
+        "streak": 0,
         "timestamp": datetime.utcnow(),
-        "duration": duration,
-        "status": status
     }
 
     habits_collection.insert_one(habit_data)

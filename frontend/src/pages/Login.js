@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../services/api";
 import useAxios from "../hooks/useAxios";
 
 const Login = () => {
@@ -12,22 +11,21 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const { data, error, statusCode } = await fetchData({
+      const { data, statusCode } = await fetchData({
         method: "POST",
         url: "/login",
         options: {
           data: { email, password },
         },
       });
-
-      if (error) {
-        throw new Error(error);
-      }
       if (statusCode === 200) {
         localStorage.setItem("token", data.token);
         navigate("/dashboard");
       } else if (statusCode === 401) {
         alert("Invalid credentials");
+      } else if (statusCode === 404) {
+        alert("User not found");
+        navigate("/register");
       }
     } catch (error) {
       console.error("Login failed:", error);
