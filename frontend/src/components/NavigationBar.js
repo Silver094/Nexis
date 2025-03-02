@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const NavigationBar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
-  
+
   const navigate = useNavigate();
   useEffect(() => {
     if (localStorage.getItem("token")) {
@@ -13,6 +13,7 @@ const NavigationBar = () => {
     } else {
       setIsAuthenticated(false);
     }
+    // eslint-disable-next-line
   }, [localStorage.getItem("token")]);
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -31,7 +32,7 @@ const NavigationBar = () => {
             className="d-inline-block align-top"
             alt="Nexis Logo"
           />
-           {"  Nexis"}
+          {"  Nexis"}
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
