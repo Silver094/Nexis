@@ -1,8 +1,7 @@
 import React from "react";
-import { Container, Row, Col } from "react-bootstrap";
+import { Container, Row } from "react-bootstrap";
 import Habits from "./Habits";
 import Insights from "./Insights";
-import Progress from "./Progress";
 
 const Dashboard = () => {
   return (

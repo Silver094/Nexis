@@ -23,7 +23,7 @@ const useAxios = () => {
         if (auth) {
           const token = localStorage.getItem("token");
           if (!token) {
-            throw { response: { status: 401, data: "No token provided" } };
+            throw new Error(JSON.stringify({ response: { status: 401, data: "No token provided" } }));
           }
           config.headers = {
             ...config.headers,

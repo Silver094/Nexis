@@ -23,6 +23,7 @@ const Habits = () => {
     };
 
     getHabits();
+    // eslint-disable-next-line
   }, []);
 
   const handleAddHabit = async (e) => {
@@ -144,7 +145,9 @@ const Habits = () => {
           ))}
         </ListGroup>
       ) : (
-        <p className="text-center mt-3">No habits added yet. Start tracking! 🚀</p>
+        <p className="text-center mt-3">
+          No habits added yet. Start tracking! 🚀
+        </p>
       )}
     </Card>
   );
